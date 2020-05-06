@@ -27,39 +27,65 @@ class _MyAppHomeState extends State<MyAppHome> {
 
   var step = 0;
   var score = 0;
+  String userName = '';
+  int typeCharsLength = 0;
   var shownWidget;
   var lastTypeAt = new DateTime.now().millisecondsSinceEpoch;
-  String lorem ="                                             Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+  String lorem ="                                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
       .toLowerCase()
       .replaceAll(',', ' ')
       .replaceAll('.', ' ');
 
+void updateLastTypeAt(){
+  this.lastTypeAt = DateTime.now().millisecondsSinceEpoch;
+
+}
 
   void onType(String value ){
-    print (value);
+  updateLastTypeAt();
+  String trimValue = lorem.trimLeft();
+  if (trimValue.indexOf(value) != 0) {
+      step = 2;
+  }else {
+    typeCharsLength = value.length;
+  }
+  }
+
+  void resetGame (){
+  setState(() {
+    typeCharsLength = 0;
+    step = 0;
+    userName ='';
+  });
+  }
+
+
+  void onUserNameType(String value){
+  setState(() {
+    this.userName = value.substring(0,3);
+
+  });
   }
 
 
 
   void onStartClick(){
     setState(() {
+      updateLastTypeAt();
       step++;
     });
     Timer.periodic(new Duration(seconds: 1), (timer) {
       int now = DateTime.now().millisecondsSinceEpoch;
 
       //game over
-      if(now - lastTypeAt >7000){
-        step = 2;
-      }
-
-
       setState(() {
-        if(step ==1 ) {
-          score++;
+      if(step ==1 && now - lastTypeAt >5000){
+        step ++;
+      }
+      if (step !=1 ){
+        timer.cancel();
         }
       });
-
     });
   }
 
@@ -75,25 +101,37 @@ class _MyAppHomeState extends State<MyAppHome> {
 
 
 
-
     if ( step == 0 ){
       shownWidget = <Widget>[
         Text("Hoşgeldin"),
+        Container(
+          padding: EdgeInsets.all(20),
+          child: TextField(
+            onChanged: onUserNameType,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'İsmin Nedir?',
+            ),
+
+          ),
+        ),
         Container(padding: const EdgeInsets.only(top: 10),
           child: RaisedButton(
             child: Text("Başla!"),
-            onPressed: onStartClick,
+            onPressed: userName.length == 0 ? null : onStartClick,
+
           ),
         )
       ];
     }
+
 
     else if (step == 1 )
     {
       shownWidget = <Widget>[
         Padding(
           padding: const EdgeInsets.only(bottom: 30),
-          child: Text('score:'+ '$score'),
+          child: Text('score:'+ '$typeCharsLength'),
         ),
         Container(
           height: 50,
@@ -121,7 +159,7 @@ class _MyAppHomeState extends State<MyAppHome> {
             autofocus: true,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
-              labelText: 'Type',
+              labelText: 'Yazmaya Başla!',
             ),
             onChanged: onType,
           ),
@@ -131,7 +169,8 @@ class _MyAppHomeState extends State<MyAppHome> {
 
     else if (step == 2){
       shownWidget = <Widget>[
-        Text("Geç Kaldın! Score : '$score'"),
+        Text("Geç Kaldın! Score : '$typeCharsLength'"),
+        RaisedButton(child: Text('Restart'),onPressed: resetGame)
       ];
     }
 
